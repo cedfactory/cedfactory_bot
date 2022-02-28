@@ -25,21 +25,33 @@ def list(update, context):
     print(df["name"].tolist())
     update.message.reply_text(df["name"].tolist())
 
-def start(update, context):
-    update.message.reply_text("Hello! Starting the bot! trend / list / pred")
+def echo(update, context):
+    response = update.message.text.split(' ', 1)[1]
+    update.message.reply_text(response)
+
+
+load_dotenv()
+token = os.getenv('TELEGRAM_TOKEN')
+if token == "":
+    token=os.environ["TELEGRAM_TOKEN"]
+
+bot = telegram.Bot(token)
+updater = telegram.ext.Updater(token)
+disp = updater.dispatcher
+
+disp.add_handler(telegram.ext.CommandHandler("list", list))
+disp.add_handler(telegram.ext.CommandHandler("echo", echo))
+
+def webhook(request):
+    if request.method == "POST":
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        #chat_id = update.message.chat.id
+        # Reply with the same message
+        #bot.sendMessage(chat_id=chat_id, text=update.message.text)
+        disp.process_update(update)
+    return "ok"
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-
-    load_dotenv()
-    
-    token = os.getenv('TELEGRAM_TOKEN')
-    print(token)
-    updater = telegram.ext.Updater(token, use_context=True)
-    disp = updater.dispatcher
-
-    disp.add_handler(telegram.ext.CommandHandler("start",start))
-    disp.add_handler(telegram.ext.CommandHandler("list", list))
-
     updater.start_polling()
     updater.idle()
